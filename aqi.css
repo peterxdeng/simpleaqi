@@ -53,6 +53,11 @@ form {
     width: auto;
 }
 
+select {
+    display:block;
+    margin: 5px auto;
+}
+
 /*! * * * * * * * * * * * * * * * * * * * *\  
   CSShake :: shake-horizontal
   v1.5.0
