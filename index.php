@@ -23,17 +23,22 @@ if ($stationID == NULL && !isset($_COOKIE["homeStation"])) {
             //echo "<!-- \r\n"; var_dump($r);echo "\r\n -->"; //debug
             setValuesFromJSON($r, $pm25, $humidity);
             
-            if ($conversion == "epa") { // adjustment based on EPA recommendations
-                $pm25 = (0.52 * $pm25) - (0.085 * $humidity) + 5.71;
-            } else if ($conversion == "larpa") { // larpa adjustment based on https://www.lrapa.org/DocumentCenter/View/4147/PurpleAir-Correction-Summary
+            if ($conversion == "lrapa") { // lrapa adjustment based on https://www.lrapa.org/DocumentCenter/View/4147/PurpleAir-Correction-Summary
                 $pm25 = max(0, ($pm25 * 0.5) - 0.66); // no less than 0
             } else if ($conversion == "purpleair") { 
                 // no adjustment
+            } else if ($conversion == "larpa") { //fix misspelling
+                $conversion = "lrapa";
             } else {
                 // unrecognized or unset, set to epa
                 $conversion = "epa";
-                //setcookie("conversion", $conversion, time() + (86400 * 30));
             }
+            
+            if ($conversion == "epa") { // adjustment based on EPA recommendations
+                $pm25 = (0.52 * $pm25) - (0.085 * $humidity) + 5.71;
+            }
+        
+            setcookie("conversion", $conversion, time() + (86400 * 30));
             
             $aqi = aqiFromPM($pm25);
             
@@ -171,8 +176,8 @@ function renderStationToolbar() {
         echo 'Home Station: ' . $GLOBALS['stationName'] . '</a>  | <a href="#" onclick="changeStation();">Change Station</a> ';
     } else {
         echo 'Station: ' . $GLOBALS['stationName'] . '</a> ';
-        echo '| <a href="#" onclick="changeStation();">Change Station</a> '; 
-        echo '<br> <a href="" onclick="setHome();">Set as Home</a> | <a href=".">Go to Home Station</a>';
+        echo '| <a href="" onclick="setHome();">Set as Home</a>'; 
+        echo '<br> <a href="#" onclick="changeStation();">Change Station</a> | <a href=".">Go to Home Station</a>';
     }
 
 }
@@ -180,14 +185,14 @@ function renderConversionsToobar() {
     echo '<div id="conversions" style="margin-top:5px;">
             <a id="currentConversion" href="#" onclick="changeConversion();">';
     if ($GLOBALS["conversion"] == "purpleair") { echo 'Purpleair Standard AQI'; }
-    else if ($GLOBALS["conversion"] == "larpa") { echo 'AQI Conversion: LARPA'; }
+    else if ($GLOBALS["conversion"] == "lrapa") { echo 'AQI Conversion: LRAPA'; }
     else if ($GLOBALS["conversion"] == "epa") { echo 'AQI Conversion: EPA'; }
     echo '  </a>
             <select id="select_conversions" style="display:none;" onchange="setConversion();">
                 <option value="" selected>-- Choose a Conversion --</option>
                 <option value="purpleair">Purple Air Standard</option>
                 <option value="epa">EPA</option>
-                <option value="larpa">LARPA</option>
+                <option value="lrapa">LRAPA</option>
             </select>
          </div>';
 }
@@ -270,16 +275,16 @@ function renderConversionsToobar() {
                 document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
             }
             function deleteCookie(cname, path, domain) {
-                if( getCookie(name) ) {
-                document.cookie = name + "=" +
+                if(getCookie(cname)) {
+                document.cookie = cname + "=" +
                   ((path) ? ";path="+path:"")+
                   ((domain)?";domain="+domain:"") +
                   ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
                 }
             }
-            function getCookie(name){
+            function getCookie(cname){
                 return document.cookie.split(';').some(c => {
-                    return c.trim().startsWith(name + '=');
+                    return c.trim().startsWith(cname + '=');
                 });
             }
         </script>
@@ -310,4 +315,3 @@ function renderConversionsToobar() {
         </div>
     </body>
 </html>
-
