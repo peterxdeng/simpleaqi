@@ -35,7 +35,7 @@ if ($stationID == NULL && !isset($_COOKIE["homeStation"])) {
             }
             
             if ($conversion == "epa") { // adjustment based on EPA recommendations
-                $pm25 = (0.52 * $pm25) - (0.085 * $humidity) + 5.71;
+                $pm25 = max (0, (0.52 * $pm25) - (0.085 * $humidity) + 5.71);
             }
         
             setcookie("conversion", $conversion, time() + (86400 * 30));
@@ -155,19 +155,68 @@ function getAQIMessage($aqi) {
       return undefined;
     }
 }
+
 function getAQIColors($aqi) {
-    if ($aqi === NULL) { return "color:black; background-color:#F0F0F0"; // error state
-    } else if ($aqi < 15) { return "color:black; background-color:rgba(107, 226, 67, 1)";
-    } else if ($aqi < 40) { return "color:black; background-color:rgba(219, 248, 81, 1)";
-    } else if ($aqi < 50) { return "color:black; background-color:rgba(255, 255, 85, 1)";
-    } else if ($aqi < 70) { return "color:black; background-color:rgba(249, 206, 71, 1)";
-    } else if ($aqi < 90) { return "color:black; background-color:rgba(243, 165, 60, 1)";
-    } else if ($aqi < 110) { return "color:white; background-color:rgba(238, 115, 48, 1)";
-    } else if ($aqi < 170) { return "color:white; background-color:rgba(200, 42, 50, 1)";
-    } else if ($aqi < 200) { return "color:white; background-color:rgba(140, 26, 75, 1)";
-    } else if ($aqi < 300) { return "color:white; background-color:rgba(134, 25, 66, 1)";
-    } else if ($aqi < 400) { return "color:white; background-color:rgba(115, 20, 37, 1)";
-    } else { return "color:white; background-color:rgba(115, 20, 37, 1)";}
+    $RGB_GREEN = [
+        "r" => 108,
+        "g" => 226,
+        "b" => 68,
+    ];
+
+    $RGB_YELLOW = [
+        "r" => 255,
+        "g" => 253,
+        "b" => 85,
+    ];
+
+    $RGB_ORANGE = [
+        "r" => 239,
+        "g" => 131,
+        "b" => 50,
+    ];
+
+    $RGB_RED = [
+        "r" => 233,
+        "g" => 51,
+        "b" => 36,
+    ];
+
+    $RGB_MAROON = [
+        "r" => 141,
+        "g" => 27,
+        "b" => 76,
+    ];
+
+    $RGB_DEEPMAROON = [
+        "r" => 115,
+        "g" => 20,
+        "b" => 37,
+    ];
+    
+    if ($aqi >= 0 && $aqi < 50) {
+        return 'color:black; background-color:'. getColorInGradient($RGB_GREEN, $RGB_YELLOW, $aqi, 50);
+    } else if ($aqi >= 50 && $aqi < 100) {
+        return 'color:black; background-color:'. getColorInGradient($RGB_YELLOW, $RGB_ORANGE, $aqi - 50, 50);
+    } else if ($aqi >= 100 && $aqi < 150) {
+        return 'color:black; background-color:'. getColorInGradient($RGB_ORANGE, $RGB_RED, $aqi - 100, 50);
+    } else if ($aqi >= 150 && $aqi < 200) {
+        return 'color:white; background-color:'. getColorInGradient($RGB_RED, $RGB_MAROON, $aqi - 150, 50);
+    } else if ($aqi >= 200 && $aqi < 250) {
+        return 'color:white; background-color:'. getColorInGradient($RGB_MAROON, $RGB_MAROON, 1, 1);
+    } else if ($aqi >= 250 && $aqi < 300) {
+        return 'color:white; background-color:'. getColorInGradient($RGB_MAROON, $RGB_DEEPMAROON, $aqi - 200, 50);
+    } else if ($aqi >= 300) {
+        return 'color:white; background-color:'. getColorInGradient($RGB_DEEPMAROON, $RGB_DEEPMAROON, 1, 1);
+    } else {
+    	return 'color:black; background-color:rgb(250,250,250)';
+    }
+}
+
+function getColorInGradient($start, $end, $step, $totalSteps) {
+    $r = intval($start["r"] + ((($end["r"] - $start["r"]) / $totalSteps) * $step));
+    $g = intval($start["g"] + ((($end["g"] - $start["g"]) / $totalSteps) * $step));
+    $b = intval($start["b"] + ((($end["b"] - $start["b"]) / $totalSteps) * $step));
+    return "rgb(" . $r . "," . $g . "," . $b . ")";
 }
 function renderStationToolbar() {
     echo '<a href="https://www.purpleair.com/map?select=' . $GLOBALS['stationID'] .
@@ -315,3 +364,4 @@ function renderConversionsToobar() {
         </div>
     </body>
 </html>
+
