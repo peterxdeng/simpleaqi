@@ -193,7 +193,9 @@ function getAQIColors($aqi) {
         "b" => 37,
     ];
     
-    if ($aqi >= 0 && $aqi < 50) {
+    if ($aqi === NULL) {
+        return 'color:black; background-color:rgb(250,250,250)';
+    } else if ($aqi >= 0 && $aqi < 50) {
         return 'color:black; background-color:'. getColorInGradient($RGB_GREEN, $RGB_YELLOW, $aqi, 50);
     } else if ($aqi >= 50 && $aqi < 100) {
         return 'color:black; background-color:'. getColorInGradient($RGB_YELLOW, $RGB_ORANGE, $aqi - 50, 50);
